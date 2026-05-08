@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Client-side perspective correction tool with draggable guides and aspect ratio scaling. No server required.">
+  <title>Perspective Corrector</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app">
+
+  <!-- Toolbar -->
+  <header class="toolbar" id="toolbar">
+    <span class="toolbar-brand">⬡ Perspective Corrector</span>
+    <div class="toolbar-separator"></div>
+
+    <button class="btn" id="btn-open" title="Open image (Ctrl+O)">
+      <span class="btn-icon">📂</span> Open Image
+    </button>
+    <button class="btn" id="btn-reset" title="Reset guides (R)">
+      <span class="btn-icon">↺</span> Reset
+    </button>
+    <button class="btn" id="btn-undo" title="Undo (Ctrl+Z)">
+      <span class="btn-icon">⟲</span>
+    </button>
+    <button class="btn" id="btn-redo" title="Redo (Ctrl+Y)">
+      <span class="btn-icon">⟳</span>
+    </button>
+
+    <div class="toolbar-separator"></div>
+
+    <button class="btn btn-accent" id="btn-export" title="Export corrected image (Ctrl+S)">
+      <span class="btn-icon">💾</span> Export Image
+    </button>
+
+    <div class="toolbar-right">
+      <button class="btn btn-small" id="btn-import-guides" title="Import guides from JSON">
+        <span class="btn-icon">📥</span> Import Guides
+      </button>
+      <button class="btn btn-small" id="btn-export-guides" title="Save guides as JSON">
+        <span class="btn-icon">📤</span> Save Guides
+      </button>
+    </div>
+  </header>
+
+  <!-- Workspace -->
+  <main class="workspace">
+
+    <!-- Canvas area -->
+    <div class="canvas-container" id="canvas-container">
+      <canvas id="main-canvas"></canvas>
+
+      <!-- Empty state -->
+      <div class="empty-state" id="empty-state">
+        <div class="empty-state-icon">🖼️</div>
+        <div class="empty-state-text">Drop an image here to begin</div>
+        <div class="empty-state-hint">or click <kbd>Ctrl+O</kbd> &nbsp;·&nbsp; Supports JPG, PNG, WebP</div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+
+      <!-- Guide info -->
+      <div class="sidebar-section">
+        <div class="sidebar-title">Guides</div>
+        <div class="guide-item" data-guide="v1">
+          <div class="guide-dot" style="color: var(--guide-v1); background: var(--guide-v1);"></div>
+          <span class="guide-label">V1 Vertical</span>
+          <span class="guide-angle" id="angle-v1">—</span>
+        </div>
+        <div class="guide-item" data-guide="v2">
+          <div class="guide-dot" style="color: var(--guide-v2); background: var(--guide-v2);"></div>
+          <span class="guide-label">V2 Vertical</span>
+          <span class="guide-angle" id="angle-v2">—</span>
+        </div>
+        <div class="guide-item" data-guide="h1">
+          <div class="guide-dot" style="color: var(--guide-h1); background: var(--guide-h1);"></div>
+          <span class="guide-label">H1 Horizontal</span>
+          <span class="guide-angle" id="angle-h1">—</span>
+        </div>
+        <div class="guide-item" data-guide="h2">
+          <div class="guide-dot" style="color: var(--guide-h2); background: var(--guide-h2);"></div>
+          <span class="guide-label">H2 Horizontal</span>
+          <span class="guide-angle" id="angle-h2">—</span>
+        </div>
+      </div>
+
+      <!-- Aspect Ratio -->
+      <div class="sidebar-section">
+        <div class="sidebar-title">Aspect Ratio Scaling</div>
+        <div class="aspect-row">
+          <span class="aspect-label">H</span>
+          <input type="number" class="aspect-input" id="aspect-h" placeholder="H dist" min="0" step="any">
+        </div>
+        <div class="aspect-row">
+          <span class="aspect-label">V</span>
+          <input type="number" class="aspect-input" id="aspect-v" placeholder="V dist" min="0" step="any">
+        </div>
+        <div class="aspect-presets">
+          <button class="preset-btn" data-h="1" data-v="1">1:1</button>
+          <button class="preset-btn" data-h="4" data-v="3">4:3</button>
+          <button class="preset-btn" data-h="3" data-v="2">3:2</button>
+          <button class="preset-btn" data-h="16" data-v="9">16:9</button>
+          <button class="preset-btn" data-h="0" data-v="0">None</button>
+        </div>
+      </div>
+
+      <!-- Display Options -->
+      <div class="sidebar-section">
+        <div class="sidebar-title">Display</div>
+        <div class="toggle-row">
+          <span class="toggle-label">Grid overlay</span>
+          <input type="checkbox" class="toggle" id="toggle-grid">
+        </div>
+        <div class="toggle-row">
+          <span class="toggle-label">Guide labels</span>
+          <input type="checkbox" class="toggle" id="toggle-labels" checked>
+        </div>
+      </div>
+
+      <!-- Export Options -->
+      <div class="sidebar-section">
+        <div class="sidebar-title">Export</div>
+        <div class="aspect-row">
+          <span class="aspect-label" style="width:auto">Format</span>
+          <select class="format-select" id="export-format">
+            <option value="png" selected>PNG (lossless)</option>
+            <option value="jpeg">JPEG (lossy)</option>
+            <option value="webp">WebP</option>
+          </select>
+        </div>
+        <div class="toggle-row">
+          <span class="toggle-label">Crop to guides</span>
+          <input type="checkbox" class="toggle" id="toggle-crop">
+        </div>
+      </div>
+
+      <!-- Shortcuts -->
+      <div class="sidebar-section">
+        <div class="sidebar-title">Shortcuts</div>
+        <div style="font-size:10px; color:var(--text-muted); line-height:1.8;">
+          <kbd>Ctrl+O</kbd> Open &nbsp;
+          <kbd>R</kbd> Reset<br>
+          <kbd>Ctrl+Z</kbd> Undo &nbsp;
+          <kbd>Ctrl+Y</kbd> Redo<br>
+          <kbd>Ctrl+S</kbd> Export &nbsp;
+          <kbd>Space</kbd>+Drag Pan<br>
+          <kbd>Scroll</kbd> Zoom &nbsp;
+          <kbd>Shift</kbd> Snap axis<br>
+          <kbd>+</kbd><kbd>-</kbd> Zoom &nbsp;
+          <kbd>0</kbd> Fit view<br>
+          <kbd>↑↓←→</kbd>/<kbd>WASD</kbd> Nudge 1px<br>
+          <kbd>Shift</kbd>+Nudge = 10px
+        </div>
+      </div>
+
+    </aside>
+  </main>
+
+  <!-- Status Bar -->
+  <footer class="statusbar">
+    <span class="status-text" id="status-text">Drop an image or press Ctrl+O to open a photo.</span>
+    <span class="status-dims" id="status-dims"></span>
+    <span class="status-zoom" id="status-zoom"></span>
+  </footer>
+
+</div>
+
+<!-- Drop Overlay -->
+<div class="drop-overlay" id="drop-overlay">
+  <div class="drop-zone">
+    <div class="drop-icon">📸</div>
+    <div class="drop-text">Drop image here</div>
+    <div class="drop-hint">JPG, PNG, or WebP &nbsp;·&nbsp; also accepts guide .json files</div>
+  </div>
+</div>
+
+<!-- Loupe -->
+<div class="loupe" id="loupe">
+  <canvas id="loupe-canvas" width="300" height="300"></canvas>
+</div>
+
+<!-- Progress Overlay -->
+<div class="progress-overlay" id="progress-overlay">
+  <div class="progress-label" id="progress-label">Processing…</div>
+  <div class="progress-bar-track">
+    <div class="progress-bar-fill" id="progress-fill"></div>
+  </div>
+</div>
+
+<!-- Hidden file input -->
+<input type="file" id="file-input" accept="image/*,.json" style="display:none" multiple>
+
+<script src="matrix.js"></script>
+<script src="corrector.js"></script>
+<script src="app-ui.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
