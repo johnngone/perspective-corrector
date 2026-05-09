@@ -131,10 +131,25 @@ class AppUI {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, cw, ch);
     if (!this.image) return;
+
+    // Viewport-clipped draw: only render the visible portion of the image
+    // to avoid exceeding browser canvas texture limits at extreme zoom levels
+    const vs = this.viewScale;
+    const srcL = Math.max(0, Math.floor(-this.offX / vs));
+    const srcT = Math.max(0, Math.floor(-this.offY / vs));
+    const srcR = Math.min(this.imgW, Math.ceil((cw - this.offX) / vs));
+    const srcB = Math.min(this.imgH, Math.ceil((ch - this.offY) / vs));
+    if (srcR <= srcL || srcB <= srcT) { this._dirty = false; return; }
+
+    const dstX = this.offX + srcL * vs;
+    const dstY = this.offY + srcT * vs;
+    const dstW = (srcR - srcL) * vs;
+    const dstH = (srcB - srcT) * vs;
+
     ctx.save();
-    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingEnabled = vs < 4;
     ctx.imageSmoothingQuality = 'high';
-    ctx.drawImage(this.image, this.offX, this.offY, this.imgW*this.viewScale, this.imgH*this.viewScale);
+    ctx.drawImage(this.image, srcL, srcT, srcR - srcL, srcB - srcT, dstX, dstY, dstW, dstH);
     ctx.restore();
 
     if (this.showGrid) this._drawGrid(ctx, cw, ch);

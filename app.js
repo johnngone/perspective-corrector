@@ -139,33 +139,72 @@ class App {
     c.addEventListener('wheel', e => { e.preventDefault(); this._onWheel(e); }, {passive:false});
     c.addEventListener('contextmenu', e => e.preventDefault());
 
-    // Pinch-to-zoom for mobile
+    // ── Mobile touch: two-finger pan+zoom, single-finger pan if no guide ──
     let lastPinchDist = 0;
+    let lastPinchCX = 0, lastPinchCY = 0;
+    let touchPanning = false;
+    let touchPanLX = 0, touchPanLY = 0;
+
     c.addEventListener('touchstart', e => {
       if (e.touches.length === 2) {
         e.preventDefault();
-        const dx = e.touches[0].clientX - e.touches[1].clientX;
-        const dy = e.touches[0].clientY - e.touches[1].clientY;
-        lastPinchDist = Math.hypot(dx, dy);
+        // Cancel any single-finger pan/drag
+        touchPanning = false;
+        this.dragState = null;
+        const t0 = e.touches[0], t1 = e.touches[1];
+        lastPinchDist = Math.hypot(t0.clientX - t1.clientX, t0.clientY - t1.clientY);
+        lastPinchCX = (t0.clientX + t1.clientX) / 2;
+        lastPinchCY = (t0.clientY + t1.clientY) / 2;
+      } else if (e.touches.length === 1 && this.ui.image && !this.dragState) {
+        // Single finger: check if touching a guide; if not, pan
+        const r = this.ui.canvas.getBoundingClientRect();
+        const cx = e.touches[0].clientX - r.left;
+        const cy = e.touches[0].clientY - r.top;
+        const hit = this.ui.hitTest(cx, cy);
+        if (!hit) {
+          touchPanning = true;
+          touchPanLX = e.touches[0].clientX;
+          touchPanLY = e.touches[0].clientY;
+        }
       }
     }, {passive: false});
+
     c.addEventListener('touchmove', e => {
       if (e.touches.length === 2 && this.ui.image) {
         e.preventDefault();
-        const dx = e.touches[0].clientX - e.touches[1].clientX;
-        const dy = e.touches[0].clientY - e.touches[1].clientY;
-        const dist = Math.hypot(dx, dy);
+        const t0 = e.touches[0], t1 = e.touches[1];
+        const dist = Math.hypot(t0.clientX - t1.clientX, t0.clientY - t1.clientY);
+        const mcx = (t0.clientX + t1.clientX) / 2;
+        const mcy = (t0.clientY + t1.clientY) / 2;
+
         if (lastPinchDist > 0) {
+          // Pan: midpoint movement
+          this.ui.offX += mcx - lastPinchCX;
+          this.ui.offY += mcy - lastPinchCY;
+
+          // Zoom: distance change, centered on midpoint
           const factor = dist / lastPinchDist;
           const r = this.ui.canvas.getBoundingClientRect();
-          const cx = (e.touches[0].clientX + e.touches[1].clientX) / 2 - r.left;
-          const cy = (e.touches[0].clientY + e.touches[1].clientY) / 2 - r.top;
-          this._zoomAt(cx, cy, factor);
+          this._zoomAt(mcx - r.left, mcy - r.top, factor);
         }
         lastPinchDist = dist;
+        lastPinchCX = mcx;
+        lastPinchCY = mcy;
+      } else if (e.touches.length === 1 && touchPanning) {
+        e.preventDefault();
+        const tx = e.touches[0].clientX, ty = e.touches[0].clientY;
+        this.ui.offX += tx - touchPanLX;
+        this.ui.offY += ty - touchPanLY;
+        touchPanLX = tx;
+        touchPanLY = ty;
+        this.ui.markDirty();
       }
     }, {passive: false});
-    c.addEventListener('touchend', () => { lastPinchDist = 0; });
+
+    c.addEventListener('touchend', e => {
+      if (e.touches.length < 2) { lastPinchDist = 0; }
+      if (e.touches.length === 0) { touchPanning = false; }
+    });
   }
 
   _canvasXY(e) {
