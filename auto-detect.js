@@ -103,7 +103,7 @@ self.onmessage = function(e) {
     else if(deg>55&&deg<125) hL.push(peaks[i]);
   }
 
-  // Pick 2 well-separated lines from each group
+  // Pick the two strongest lines that are separated by at least minSep.
   function pickTwo(lines, minSep) {
     if(lines.length<2) return lines.length ? [lines[0], lines[0]] : null;
     var a = lines[0];
@@ -113,10 +113,11 @@ self.onmessage = function(e) {
     return [a, lines[lines.length > 1 ? 1 : 0]];
   }
 
-  var v2 = pickTwo(vL, w*0.15), h2 = pickTwo(hL, h*0.15);
+  // Use 5% min separation to support documents that are small in the frame
+  var v2 = pickTwo(vL, w*0.05), h2 = pickTwo(hL, h*0.05);
   if (!v2 || !h2) { self.postMessage({error:'Could not detect enough lines. Try adjusting guides manually.'}); return; }
 
-  // Convert (rho,theta) line to 2 endpoints clipped to image
+  // Convert (rho,theta) line to 2 endpoints clipped to image bounds (fallback)
   function lineToEndpoints(rho, theta, w, h) {
     var ct=Math.cos(theta), st=Math.sin(theta), pts=[];
     if(Math.abs(ct)>1e-6){var x0=rho/ct; if(x0>=0&&x0<w) pts.push([x0,0]);}
@@ -134,15 +135,81 @@ self.onmessage = function(e) {
     return [unique[0], unique[1]];
   }
 
+  // Find actual line segment limits by walking along the line and finding the longest continuous edge
+  function findLineLimits(rho, theta, w, h, edges) {
+    var ct=Math.cos(theta), st=Math.sin(theta);
+    var diag = Math.ceil(Math.sqrt(w*w + h*h));
+    
+    var segments = [];
+    var currentSegment = null;
+    // Allow gaps of up to 1.5% of image dimension. 
+    // This is tight enough to break at the paper edge, but loose enough to tolerate small smudges.
+    var maxGap = Math.max(5, Math.min(w, h) * 0.015); 
+    var gapCount = 0;
+    
+    // Walk along the parametric line P(t) = P0 + t*D
+    // where P0 is (rho*ct, rho*st) and D is (-st, ct)
+    for (var t = -diag; t <= diag; t++) {
+      var x = rho * ct - t * st;
+      var y = rho * st + t * ct;
+      var ix = Math.round(x), iy = Math.round(y);
+      
+      if (ix >= 0 && ix < w && iy >= 0 && iy < h) {
+        var hasEdge = false;
+        // Check a 3x3 neighborhood for robustness against rasterization
+        for (var dy=-1; dy<=1 && !hasEdge; dy++) {
+          for (var dx=-1; dx<=1 && !hasEdge; dx++) {
+            var nx = ix+dx, ny = iy+dy;
+            if (nx >= 0 && nx < w && ny >= 0 && ny < h) {
+              // ONLY consider strong edges (2) that were actually part of the Hough transform!
+              // Isolated weak edges (1) are background noise.
+              if (edges[ny*w+nx] === 2) hasEdge = true;
+            }
+          }
+        }
+        
+        if (hasEdge) {
+          if (!currentSegment) {
+            currentSegment = { start: [x, y], end: [x, y], startT: t, endT: t };
+          } else {
+            currentSegment.end = [x, y];
+            currentSegment.endT = t;
+          }
+          gapCount = 0;
+        } else {
+          if (currentSegment) {
+            gapCount++;
+            if (gapCount > maxGap) {
+              segments.push(currentSegment);
+              currentSegment = null;
+            }
+          }
+        }
+      }
+    }
+    if (currentSegment) segments.push(currentSegment);
+    
+    if (segments.length > 0) {
+      // Pick the longest continuous segment
+      segments.sort(function(a, b) {
+        return (b.endT - b.startT) - (a.endT - a.startT);
+      });
+      return [segments[0].start, segments[0].end];
+    }
+    
+    // Fallback if no edge pixels match
+    return lineToEndpoints(rho, theta, w, h);
+  }
+
   // Sort so v1 is left, v2 is right; h1 is top, h2 is bottom
   if(v2[0].rho > v2[1].rho) { var tmp=v2[0]; v2[0]=v2[1]; v2[1]=tmp; }
   if(h2[0].rho > h2[1].rho) { var tmp=h2[0]; h2[0]=h2[1]; h2[1]=tmp; }
 
   var guides = {
-    v1: lineToEndpoints(v2[0].rho, v2[0].theta, w, h),
-    v2: lineToEndpoints(v2[1].rho, v2[1].theta, w, h),
-    h1: lineToEndpoints(h2[0].rho, h2[0].theta, w, h),
-    h2: lineToEndpoints(h2[1].rho, h2[1].theta, w, h)
+    v1: findLineLimits(v2[0].rho, v2[0].theta, w, h, edges),
+    v2: findLineLimits(v2[1].rho, v2[1].theta, w, h, edges),
+    h1: findLineLimits(h2[0].rho, h2[0].theta, w, h, edges),
+    h2: findLineLimits(h2[1].rho, h2[1].theta, w, h, edges)
   };
 
   self.postMessage({progress: 1, guides: guides});
@@ -159,8 +226,9 @@ self.onmessage = function(e) {
  */
 function runAutoDetect(image, imgW, imgH, onProgress) {
   return new Promise(function(resolve, reject) {
-    // Downsample for speed (max 800px)
-    var maxDim = 800;
+    // Downsample for speed AND to naturally blur out high-frequency noise (like text)
+    // before edge detection. Without this, text creates too much noise in Hough space.
+    var maxDim = 1000;
     var scale = Math.min(1, maxDim / Math.max(imgW, imgH));
     var sw = Math.round(imgW * scale), sh = Math.round(imgH * scale);
 
