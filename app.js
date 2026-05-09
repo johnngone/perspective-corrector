@@ -25,12 +25,16 @@ class App {
     this._raf();
   }
 
-  // ── Canvas sizing ──
+  // ── Canvas sizing (DPR-aware for mobile HiDPI) ──
   _setupCanvas() {
     const ro = new ResizeObserver(() => {
       const r = this.container.getBoundingClientRect();
-      this.ui.canvas.width = r.width;
-      this.ui.canvas.height = r.height;
+      const dpr = window.devicePixelRatio || 1;
+      this.ui.canvas.width = Math.round(r.width * dpr);
+      this.ui.canvas.height = Math.round(r.height * dpr);
+      this.ui.cssW = r.width;
+      this.ui.cssH = r.height;
+      this.ui.dpr = dpr;
       if (this.ui.image) this.ui.fitView();
       this.ui.markDirty();
     });
@@ -381,11 +385,14 @@ class App {
       toggleBtn.classList.remove('active');
     };
 
-    toggleBtn.onclick = () => {
+    const toggle = () => {
       if (sidebar.classList.contains('mobile-open')) closeSidebar();
       else openSidebar();
     };
-    backdrop.onclick = closeSidebar;
+
+    toggleBtn.addEventListener('pointerup', e => { e.stopPropagation(); toggle(); });
+    toggleBtn.addEventListener('touchend', e => { e.preventDefault(); e.stopPropagation(); });
+    backdrop.addEventListener('pointerup', closeSidebar);
   }
 
   // ── Undo / Redo ──

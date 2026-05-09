@@ -29,6 +29,10 @@ class AppUI {
     this.showGrid = false;
     this.showLabels = true;
     this._dirty = true;
+    // DPR-aware sizing (set by App._setupCanvas)
+    this.cssW = 0;
+    this.cssH = 0;
+    this.dpr = 1;
   }
 
   setImage(img) {
@@ -46,7 +50,9 @@ class AppUI {
   }
 
   fitView() {
-    const cw = this.canvas.width, ch = this.canvas.height;
+    // Use CSS dimensions for layout math (not canvas.width which is DPR-scaled)
+    const cw = this.cssW || this.canvas.width;
+    const ch = this.cssH || this.canvas.height;
     if (!this.imgW) return;
     this.viewScale = Math.min(cw / this.imgW, ch / this.imgH, 1);
     this.offX = (cw - this.imgW * this.viewScale) / 2;
@@ -116,11 +122,18 @@ class AppUI {
   }
 
   draw() {
-    const ctx = this.ctx, cw = this.canvas.width, ch = this.canvas.height;
+    const ctx = this.ctx;
+    const dpr = this.dpr || 1;
+    const cw = this.cssW || this.canvas.width;
+    const ch = this.cssH || this.canvas.height;
+
+    // Scale context for HiDPI; all coordinates below are in CSS pixels
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, cw, ch);
     if (!this.image) return;
     ctx.save();
-    ctx.imageSmoothingEnabled = this.viewScale < 1;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(this.image, this.offX, this.offY, this.imgW*this.viewScale, this.imgH*this.viewScale);
     ctx.restore();
 

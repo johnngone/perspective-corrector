@@ -20,7 +20,7 @@
       <span class="btn-icon">📂</span> Open Image
     </button>
     <button class="btn" id="btn-reset" title="Reset guides (R)">
-      <span class="btn-icon">↺</span> Reset
+      <span class="btn-icon">R</span> Reset
     </button>
     <button class="btn" id="btn-undo" title="Undo (Ctrl+Z)">
       <span class="btn-icon">⟲</span>
@@ -52,9 +52,6 @@
     <div class="canvas-container" id="canvas-container">
       <canvas id="main-canvas"></canvas>
 
-      <!-- Mobile sidebar toggle -->
-      <button class="mobile-sidebar-toggle" id="btn-sidebar-toggle" title="Toggle settings panel">⚙</button>
-
       <!-- Empty state -->
       <div class="empty-state" id="empty-state">
         <div class="empty-state-icon">🖼️</div>
@@ -62,6 +59,9 @@
         <div class="empty-state-hint">or click <kbd>Ctrl+O</kbd> &nbsp;·&nbsp; Supports JPG, PNG, WebP</div>
       </div>
     </div>
+
+    <!-- Mobile sidebar toggle (outside canvas-container so touch events work) -->
+    <button class="mobile-sidebar-toggle" id="btn-sidebar-toggle" title="Toggle settings panel">⚙</button>
 
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
