@@ -167,38 +167,26 @@ class App {
     c.addEventListener('wheel', e => { e.preventDefault(); this._onWheel(e); }, {passive:false});
     c.addEventListener('contextmenu', e => e.preventDefault());
 
-    // ── Mobile touch: two-finger pan+zoom, single-finger pan if no guide ──
+    // ── Mobile touch: two-finger pan+zoom ──
+    // Single-finger pan/drag is natively handled by the pointer events below.
     let lastPinchDist = 0;
     let lastPinchCX = 0, lastPinchCY = 0;
-    let touchPanning = false;
-    let touchPanLX = 0, touchPanLY = 0;
 
     c.addEventListener('touchstart', e => {
-      if (e.touches.length === 2) {
+      if (e.touches.length >= 2) {
         e.preventDefault();
-        // Cancel any single-finger pan/drag
-        touchPanning = false;
+        // Cancel any single-finger pointer operations
         this.dragState = null;
+        this.panState = null;
         const t0 = e.touches[0], t1 = e.touches[1];
         lastPinchDist = Math.hypot(t0.clientX - t1.clientX, t0.clientY - t1.clientY);
         lastPinchCX = (t0.clientX + t1.clientX) / 2;
         lastPinchCY = (t0.clientY + t1.clientY) / 2;
-      } else if (e.touches.length === 1 && this.ui.image && !this.dragState) {
-        // Single finger: check if touching a guide; if not, pan
-        const r = this.ui.canvas.getBoundingClientRect();
-        const cx = e.touches[0].clientX - r.left;
-        const cy = e.touches[0].clientY - r.top;
-        const hit = this.ui.hitTest(cx, cy);
-        if (!hit) {
-          touchPanning = true;
-          touchPanLX = e.touches[0].clientX;
-          touchPanLY = e.touches[0].clientY;
-        }
       }
     }, {passive: false});
 
     c.addEventListener('touchmove', e => {
-      if (e.touches.length === 2 && this.ui.image) {
+      if (e.touches.length >= 2 && this.ui.image) {
         e.preventDefault();
         const t0 = e.touches[0], t1 = e.touches[1];
         const dist = Math.hypot(t0.clientX - t1.clientX, t0.clientY - t1.clientY);
@@ -218,20 +206,11 @@ class App {
         lastPinchDist = dist;
         lastPinchCX = mcx;
         lastPinchCY = mcy;
-      } else if (e.touches.length === 1 && touchPanning) {
-        e.preventDefault();
-        const tx = e.touches[0].clientX, ty = e.touches[0].clientY;
-        this.ui.offX += tx - touchPanLX;
-        this.ui.offY += ty - touchPanLY;
-        touchPanLX = tx;
-        touchPanLY = ty;
-        this.ui.markDirty();
       }
     }, {passive: false});
 
     c.addEventListener('touchend', e => {
       if (e.touches.length < 2) { lastPinchDist = 0; }
-      if (e.touches.length === 0) { touchPanning = false; }
     });
   }
 
