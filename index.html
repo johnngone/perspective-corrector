@@ -19,6 +19,9 @@
     <button class="btn" id="btn-open" title="Open image (Ctrl+O)">
       <span class="btn-icon">📂</span> Open Image
     </button>
+    <button class="btn" id="btn-auto" title="Auto-detect guides">
+      <span class="btn-icon">✨</span> Auto
+    </button>
     <button class="btn" id="btn-reset" title="Reset guides (R)">
       <span class="btn-icon">R</span> Reset
     </button>
@@ -55,7 +58,7 @@
       <!-- Empty state -->
       <div class="empty-state" id="empty-state">
         <div class="empty-state-icon">🖼️</div>
-        <div class="empty-state-text">Tap here or drop an image to begin</div>
+        <div class="empty-state-text">Click, tap, or drop image here to begin</div>
         <div class="empty-state-hint"><kbd>Ctrl+O</kbd> &nbsp;·&nbsp; Supports JPG, PNG, WebP</div>
       </div>
     </div>
@@ -199,6 +202,7 @@
 
 <script defer src="matrix.js"></script>
 <script defer src="corrector.js"></script>
+<script defer src="auto-detect.js"></script>
 <script defer src="app-ui.js"></script>
 <script defer src="app.js"></script>
 </body>

@@ -51,6 +51,7 @@ class App {
   _bindToolbar() {
     document.getElementById('btn-open').onclick = () => this._openFilePicker();
     document.getElementById('btn-reset').onclick = () => this._resetGuides();
+    document.getElementById('btn-auto').onclick = () => this._autoDetect();
     document.getElementById('btn-undo').onclick = () => this._undo();
     document.getElementById('btn-redo').onclick = () => this._redo();
     document.getElementById('btn-export').onclick = () => this._export();
@@ -58,6 +59,31 @@ class App {
     document.getElementById('btn-export-guides').onclick = () => this._exportGuides();
     // Click the empty canvas to open an image
     document.getElementById('empty-state').onclick = () => this._openFilePicker();
+  }
+
+  async _autoDetect() {
+    if (!this.ui.image) { this._setStatus('No image loaded.'); return; }
+    const progressEl = document.getElementById('progress-overlay');
+    const labelEl = document.getElementById('progress-label');
+    const fillEl = document.getElementById('progress-fill');
+    labelEl.textContent = 'Detecting lines…';
+    progressEl.classList.add('visible');
+    fillEl.style.width = '0%';
+
+    try {
+      const guides = await runAutoDetect(this.ui.image, this.ui.imgW, this.ui.imgH, p => {
+        fillEl.style.width = Math.round(p * 100) + '%';
+      });
+      this._pushUndo();
+      this.ui.guides = guides;
+      this.ui.markDirty();
+      this._updateAngles();
+      progressEl.classList.remove('visible');
+      this._setStatus('Auto-detected guides — adjust as needed.');
+    } catch (err) {
+      progressEl.classList.remove('visible');
+      this._setStatus('Auto-detect: ' + (err.message || 'failed'));
+    }
   }
 
   _openFilePicker() {
