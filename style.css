@@ -624,12 +624,226 @@ kbd {
   border-radius: 2px;
 }
 
-/* ---------- Responsive ---------- */
+/* ---------- Mobile sidebar toggle (hidden on desktop) ---------- */
+.mobile-sidebar-toggle {
+  display: none; /* shown via media query */
+}
+
+/* ---------- Responsive: Mobile ---------- */
 @media (max-width: 768px) {
-  .sidebar {
+
+  /* ── Toolbar: compact icon-only ── */
+  .toolbar {
+    flex-wrap: wrap;
+    padding: 6px 8px;
+    gap: 4px;
+  }
+
+  .toolbar-brand {
+    font-size: 12px;
+    margin-right: 6px;
+  }
+
+  .toolbar-separator {
     display: none;
   }
+
+  /* Hide button text, show icons only */
+  .btn {
+    padding: 8px 10px;
+    font-size: 0;       /* hides text */
+    gap: 0;
+  }
+
+  .btn .btn-icon {
+    font-size: 16px;    /* keep icon visible */
+  }
+
+  .btn-small {
+    padding: 6px 8px;
+  }
+
+  .btn-small .btn-icon {
+    font-size: 14px;
+  }
+
+  .toolbar-right {
+    margin-left: auto;
+    gap: 4px;
+  }
+
+  /* ── Workspace: stack vertically ── */
+  .workspace {
+    flex-direction: column;
+    position: relative;
+  }
+
+  .canvas-container {
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* ── Sidebar: slide-up bottom sheet ── */
+  .sidebar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-height: 55vh;
+    border-left: none;
+    border-top: 1px solid var(--border-glass);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    z-index: 50;
+    transform: translateY(100%);
+    transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 12px 12px 24px;
+    gap: 6px;
+    /* drag handle visual hint */
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .sidebar::before {
+    content: '';
+    display: block;
+    width: 36px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+    margin: 0 auto 8px;
+    flex-shrink: 0;
+  }
+
+  .sidebar.mobile-open {
+    transform: translateY(0);
+  }
+
+  .sidebar-section {
+    padding: 10px;
+  }
+
+  /* ── Floating gear toggle ── */
+  .mobile-sidebar-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 1px solid var(--border-glass-hover);
+    background: var(--bg-glass);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: var(--text-primary);
+    font-size: 22px;
+    cursor: pointer;
+    z-index: 40;
+    box-shadow:
+      0 4px 20px rgba(0, 0, 0, 0.4),
+      0 0 0 1px rgba(255, 255, 255, 0.06);
+    transition: all var(--transition);
+  }
+
+  .mobile-sidebar-toggle:hover,
+  .mobile-sidebar-toggle:active {
+    background: var(--bg-glass-active);
+    transform: scale(1.08);
+  }
+
+  .mobile-sidebar-toggle.active {
+    background: rgba(124, 106, 255, 0.25);
+    border-color: rgba(124, 106, 255, 0.5);
+    box-shadow: 0 4px 24px var(--accent-glow);
+  }
+
+  /* ── Backdrop overlay behind open sidebar ── */
+  .sidebar-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 45;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 300ms ease;
+  }
+
+  .sidebar-backdrop.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* ── Status bar: compact ── */
+  .statusbar {
+    padding: 4px 10px;
+    font-size: 10px;
+    gap: 8px;
+  }
+
+  /* ── Hide shortcuts section on mobile (no keyboard) ── */
+  .sidebar-section:last-child {
+    display: none;
+  }
+
+  /* ── Loupe: hide on mobile (finger covers it anyway) ── */
+  .loupe {
+    display: none;
+  }
+
+  /* ── Drop overlay: mobile-friendly sizing ── */
+  .drop-zone {
+    padding: 40px 32px;
+  }
+
+  .drop-icon {
+    font-size: 36px;
+  }
+
+  .drop-text {
+    font-size: 15px;
+  }
+
+  .drop-hint {
+    font-size: 11px;
+  }
+
+  /* ── Empty state: smaller on mobile ── */
+  .empty-state-icon {
+    font-size: 40px;
+  }
+
+  .empty-state-text {
+    font-size: 14px;
+  }
+
+  .empty-state-hint {
+    font-size: 11px;
+  }
+}
+
+/* ---------- Very small screens (phone portrait) ---------- */
+@media (max-width: 420px) {
   .toolbar-brand {
     display: none;
+  }
+
+  .toolbar {
+    justify-content: center;
+  }
+
+  .sidebar {
+    max-height: 65vh;
+  }
+
+  .mobile-sidebar-toggle {
+    bottom: 12px;
+    right: 12px;
+    width: 42px;
+    height: 42px;
+    font-size: 20px;
   }
 }

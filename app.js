@@ -134,6 +134,34 @@ class App {
     c.addEventListener('pointerleave', () => { this.ui.hoveringGuide=null; this.ui.hoverGrip=null; this.ui.hideLoupe(); this.ui.markDirty(); });
     c.addEventListener('wheel', e => { e.preventDefault(); this._onWheel(e); }, {passive:false});
     c.addEventListener('contextmenu', e => e.preventDefault());
+
+    // Pinch-to-zoom for mobile
+    let lastPinchDist = 0;
+    c.addEventListener('touchstart', e => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        lastPinchDist = Math.hypot(dx, dy);
+      }
+    }, {passive: false});
+    c.addEventListener('touchmove', e => {
+      if (e.touches.length === 2 && this.ui.image) {
+        e.preventDefault();
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const dist = Math.hypot(dx, dy);
+        if (lastPinchDist > 0) {
+          const factor = dist / lastPinchDist;
+          const r = this.ui.canvas.getBoundingClientRect();
+          const cx = (e.touches[0].clientX + e.touches[1].clientX) / 2 - r.left;
+          const cy = (e.touches[0].clientY + e.touches[1].clientY) / 2 - r.top;
+          this._zoomAt(cx, cy, factor);
+        }
+        lastPinchDist = dist;
+      }
+    }, {passive: false});
+    c.addEventListener('touchend', () => { lastPinchDist = 0; });
   }
 
   _canvasXY(e) {
@@ -333,6 +361,31 @@ class App {
         btn.classList.add('active');
       };
     });
+
+    // ── Mobile sidebar toggle ──
+    const sidebar = document.getElementById('sidebar');
+    const toggleBtn = document.getElementById('btn-sidebar-toggle');
+    // Create backdrop element for mobile
+    const backdrop = document.createElement('div');
+    backdrop.className = 'sidebar-backdrop';
+    sidebar.parentElement.insertBefore(backdrop, sidebar);
+
+    const openSidebar = () => {
+      sidebar.classList.add('mobile-open');
+      backdrop.classList.add('visible');
+      toggleBtn.classList.add('active');
+    };
+    const closeSidebar = () => {
+      sidebar.classList.remove('mobile-open');
+      backdrop.classList.remove('visible');
+      toggleBtn.classList.remove('active');
+    };
+
+    toggleBtn.onclick = () => {
+      if (sidebar.classList.contains('mobile-open')) closeSidebar();
+      else openSidebar();
+    };
+    backdrop.onclick = closeSidebar;
   }
 
   // ── Undo / Redo ──
