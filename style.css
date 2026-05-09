@@ -181,6 +181,7 @@ body::before {
   position: relative;
   overflow: hidden;
   cursor: crosshair;
+  touch-action: none; /* prevent Chrome default gestures stealing pointer events */
 }
 
 #main-canvas {
@@ -699,8 +700,8 @@ kbd {
     transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
     padding: 12px 12px env(safe-area-inset-bottom, 48px);
     gap: 6px;
-    /* Opaque dark bg instead of glassmorphism (stays readable over any image) */
-    background: rgba(12, 12, 20, 0.94);
+    /* Glass bg with enough opacity to stay readable over bright images */
+    background: rgba(12, 12, 20, 0.65);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
   }
@@ -718,6 +719,17 @@ kbd {
 
   .sidebar.mobile-open {
     transform: translateY(0);
+  }
+
+  /* Brighter text in mobile sidebar for contrast over any background */
+  .sidebar .sidebar-title {
+    color: rgba(255, 255, 255, 0.7);
+  }
+  .sidebar .toggle-label,
+  .sidebar .aspect-label,
+  .sidebar .guide-label,
+  .sidebar .guide-angle {
+    color: rgba(255, 255, 255, 0.85);
   }
 
   .sidebar-section {

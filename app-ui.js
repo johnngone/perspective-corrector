@@ -217,8 +217,23 @@ class AppUI {
     lctx.beginPath(); lctx.moveTo(ctr,0); lctx.lineTo(ctr,sz); lctx.stroke();
     lctx.beginPath(); lctx.moveTo(0,ctr); lctx.lineTo(sz,ctr); lctx.stroke();
 
-    this.loupeEl.style.left = (refX + 24) + 'px';
-    this.loupeEl.style.top = (refY + 24) + 'px';
+    // Position loupe: above the point on mobile (finger), right+below on desktop
+    const isMobile = window.innerWidth <= 768;
+    const scale = isMobile ? 0.65 : 1;  // matches CSS transform scale
+    const renderedH = sz * scale;
+    let lx = refX + 24;
+    let ly;
+    if (isMobile) {
+      ly = refY - renderedH - 40;  // above finger with gap
+      if (ly < 0) ly = refY + 60;  // if off-screen top, fall back below
+    } else {
+      ly = refY + 24;
+    }
+    // Keep on-screen horizontally
+    if (lx + sz * scale > window.innerWidth) lx = refX - sz * scale - 16;
+
+    this.loupeEl.style.left = lx + 'px';
+    this.loupeEl.style.top = ly + 'px';
     this.loupeEl.classList.add('visible');
   }
 
