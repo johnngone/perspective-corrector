@@ -56,6 +56,8 @@ class App {
     document.getElementById('btn-export').onclick = () => this._export();
     document.getElementById('btn-import-guides').onclick = () => this._importGuides();
     document.getElementById('btn-export-guides').onclick = () => this._exportGuides();
+    // Click the empty canvas to open an image
+    document.getElementById('empty-state').onclick = () => this._openFilePicker();
   }
 
   _openFilePicker() {
@@ -234,7 +236,14 @@ class App {
 
     if (e.button !== 0) return;
     const hit = this.ui.hitTest(cx, cy);
-    if (!hit) { this.dragState = null; return; }
+    if (!hit) {
+      // No guide hit — left-click pan
+      this.dragState = null;
+      this.panState = {lx:cx, ly:cy};
+      this.container.style.cursor = 'grabbing';
+      this.container.setPointerCapture(e.pointerId);
+      return;
+    }
     this._pushUndo();
     const epIdx = hit.idx ?? this.ui.nearestEndpoint(hit.key, cx, cy);
     this.dragState = {

@@ -558,7 +558,8 @@ body::before {
   justify-content: center;
   gap: 12px;
   color: var(--text-muted);
-  pointer-events: none;
+  pointer-events: auto;
+  cursor: pointer;
 }
 
 .empty-state-icon {
