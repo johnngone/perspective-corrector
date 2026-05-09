@@ -498,7 +498,9 @@ class App {
 
     const { transform, outW, outH } = result;
     const progressEl = document.getElementById('progress-overlay');
+    const labelEl = document.getElementById('progress-label');
     const fillEl = document.getElementById('progress-fill');
+    labelEl.textContent = 'Processing…';
     progressEl.classList.add('visible');
     fillEl.style.width = '0%';
 
