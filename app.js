@@ -324,6 +324,8 @@ class App {
   }
 
   _onPointerUp(e) {
+    // No image loaded: open file picker on tap/click completion
+    if (!this.ui.image) { this._openFilePicker(); return; }
     if (this.panState) {
       this.panState = null;
       this.container.style.cursor = 'crosshair';
