@@ -176,7 +176,7 @@ class AppUI {
       if (this.showLabels) {
         const mx = (x1+x2)/2+8, my = (y1+y2)/2-8;
         const lbl = key.toUpperCase() + (key[0]==='v'?' Vert':' Horiz');
-        ctx.font = 'bold 11px Inter, sans-serif';
+        ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif';
         ctx.fillStyle = col; ctx.fillText(lbl, mx, my);
       }
     }
