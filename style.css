@@ -309,6 +309,7 @@ body::before {
   display: flex;
   gap: 4px;
   flex-wrap: wrap;
+  justify-content: center;
   margin-top: 6px;
 }
 
@@ -598,6 +599,7 @@ kbd {
   font-size: 12px;
   outline: none;
   cursor: pointer;
+  margin-left: auto;
   transition: border-color var(--transition);
 }
 
@@ -665,6 +667,11 @@ kbd {
 
   .btn-small .btn-icon {
     font-size: 14px;
+  }
+
+  .sidebar .btn {
+    font-size: 11px;
+    gap: 6px;
   }
 
   .toolbar-right {
