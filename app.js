@@ -448,6 +448,32 @@ class App {
     toggleBtn.addEventListener('pointerup', e => { e.stopPropagation(); toggle(); });
     toggleBtn.addEventListener('touchend', e => { e.preventDefault(); e.stopPropagation(); });
     backdrop.addEventListener('pointerup', closeSidebar);
+
+    // Swipe down to close
+    let startY = 0;
+    let currentY = 0;
+    sidebar.addEventListener('touchstart', e => {
+      if (sidebar.scrollTop <= 0) {
+        startY = e.touches[0].clientY;
+      } else {
+        startY = 0;
+      }
+    }, {passive: true});
+
+    sidebar.addEventListener('touchmove', e => {
+      if (!startY) return;
+      currentY = e.touches[0].clientY;
+    }, {passive: true});
+
+    sidebar.addEventListener('touchend', e => {
+      if (!startY) return;
+      const dy = currentY - startY;
+      if (dy > 60 && sidebar.scrollTop <= 0) {
+        closeSidebar();
+      }
+      startY = 0;
+      currentY = 0;
+    }, {passive: true});
   }
 
   // ── Undo / Redo ──
