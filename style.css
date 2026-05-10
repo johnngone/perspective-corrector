@@ -693,12 +693,13 @@ kbd {
 
   /* ── Sidebar: slide-up bottom sheet ── */
   .sidebar {
-    position: absolute;
+    position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
     width: 100%;
-    max-height: calc(100% - 10px);
+    max-height: calc(100% - 60px);
+    max-height: calc(100dvh - 60px);
     border-left: none;
     border-top: 1px solid var(--border-glass);
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
@@ -782,7 +783,7 @@ kbd {
 
   /* ── Backdrop overlay behind open sidebar ── */
   .sidebar-backdrop {
-    position: absolute;
+    position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.4);
     z-index: 45;
