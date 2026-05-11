@@ -704,6 +704,8 @@ kbd {
     left: 0;
     right: 0;
     width: 100%;
+    height: max-content !important;
+    max-height: 100% !important;
     border-left: none;
     border-top: 1px solid var(--border-glass);
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
