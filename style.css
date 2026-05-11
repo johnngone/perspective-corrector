@@ -698,9 +698,6 @@ kbd {
     left: 0;
     right: 0;
     width: 100%;
-    height: max-content;
-    max-height: calc(100% - 20px);
-    max-height: calc(100dvh - 20px);
     border-left: none;
     border-top: 1px solid var(--border-glass);
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
