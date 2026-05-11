@@ -678,30 +678,4 @@ self.onmessage = function(e) {
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => { 
-  window.app = new App(); 
-  
-  // --- TEMPORARY VIEWPORT DIAGNOSTICS ---
-  const debugEl = document.createElement('div');
-  debugEl.style.position = 'fixed';
-  debugEl.style.top = '10px';
-  debugEl.style.left = '50%';
-  debugEl.style.transform = 'translateX(-50%)';
-  debugEl.style.zIndex = '9999';
-  debugEl.style.background = 'rgba(0,0,0,0.8)';
-  debugEl.style.color = 'lime';
-  debugEl.style.padding = '10px';
-  debugEl.style.fontSize = '12px';
-  debugEl.style.fontFamily = 'monospace';
-  debugEl.style.borderRadius = '8px';
-  debugEl.style.pointerEvents = 'none';
-  document.body.appendChild(debugEl);
-  setInterval(() => {
-    debugEl.innerHTML = `
-      innerHeight: ${window.innerHeight}<br>
-      visualViewport: ${window.visualViewport?.height}<br>
-      docClientHeight: ${document.documentElement.clientHeight}<br>
-      screenHeight: ${screen.height}
-    `;
-  }, 500);
-});
+document.addEventListener('DOMContentLoaded', () => { window.app = new App(); });
